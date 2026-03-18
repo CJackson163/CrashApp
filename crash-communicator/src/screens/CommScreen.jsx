@@ -13,13 +13,14 @@ async function fetchSuggestions(heard) {
 
   try {
     const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${GEMINI_KEY}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents: [
             {
+              role: 'user',
               parts: [
                 {
                   text: `You are helping someone with ME/CFS who cannot speak during a severe fatigue crash. Someone nearby has just said something to them. Generate exactly 3 short, practical responses they might want to give. Each response should be 2-10 words.
@@ -42,6 +43,7 @@ The person nearby said: "${heard}"`,
     );
 
     const data = await res.json();
+    console.log('Gemini response:', res.status, data);
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
     const clean = text.replace(/```json|```/g, '').trim();
     const parsed = JSON.parse(clean);
@@ -125,17 +127,21 @@ export default function CommScreen() {
 
     r.onerror = (e) => {
       console.error('Speech recognition error:', e.error);
-      if (e.error !== 'no-speech') {
+      if (e.error === 'not-allowed' || e.error === 'service-not-available') {
         setListening(false);
+        recognitionRef.current = null;
       }
     };
 
     r.onend = () => {
+      // Always restart if we're still meant to be listening
       if (recognitionRef.current) {
         try {
           r.start();
         } catch (e) {
+          console.error('Restart failed:', e);
           setListening(false);
+          recognitionRef.current = null;
         }
       }
     };
