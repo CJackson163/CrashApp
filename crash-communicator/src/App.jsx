@@ -1,8 +1,10 @@
+
 import { useState } from 'react';
 import { stopSpeaking } from './utils/speech';
 import ConfirmScreen from './screens/ConfirmScreen';
 import IntroScreen from './screens/IntroScreen';
 import CommScreen from './screens/CommScreen';
+import ContactsScreen from './screens/ContactsScreen';
 
 export default function App() {
   const [screen, setScreen] = useState('confirm');
@@ -16,7 +18,7 @@ export default function App() {
     <>
       <div className="app-header">
         <h1>Crash communicator</h1>
-        {screen === 'comm' && (
+        {(screen === 'comm' || screen === 'contacts') && (
           <button onClick={handleReset}>Reset</button>
         )}
       </div>
@@ -27,7 +29,12 @@ export default function App() {
         {screen === 'intro' && (
           <IntroScreen onDone={() => setScreen('comm')} />
         )}
-        {screen === 'comm' && <CommScreen />}
+        {screen === 'comm' && (
+          <CommScreen onContacts={() => setScreen('contacts')} />
+        )}
+        {screen === 'contacts' && (
+          <ContactsScreen onBack={() => setScreen('comm')} />
+        )}
       </div>
     </>
   );

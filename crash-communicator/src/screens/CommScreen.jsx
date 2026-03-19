@@ -23,11 +23,39 @@ async function fetchSuggestions(heard) {
               role: 'user',
               parts: [
                 {
-                  text: `You are helping someone with ME/CFS who cannot speak during a severe fatigue crash. Someone nearby has just said something to them. Generate exactly 3 short, practical responses they might want to give. Each response should be 2-10 words.
+                  text: `You are an assistive communication tool for someone experiencing a severe ME/CFS (Myalgic Encephalomyelitis / Chronic Fatigue Syndrome) crash in a public setting such as a university campus, lecture hall, library, shop, or public space. During a crash, the person is non-verbal, extremely fatigued, and cannot move much. They can only communicate by tapping buttons on a screen. The person nearby is likely a stranger, classmate, university staff member, or member of the public who is trying to help.
 
-Return ONLY a JSON array of 3 strings. No markdown, no backticks, no explanation. Just the array.
+IMPORTANT CONTEXT ABOUT ME/CFS CRASHES:
+- This is NOT a medical emergency — but it looks alarming to people who don't understand ME/CFS
+- The person cannot speak, move much, or think clearly
+- Light, sound, and touch sensitivity are common
+- They should NOT be moved unless they indicate it's ok
+- They should NOT be encouraged to push through, stand up, or walk
+- Do NOT call an ambulance unless the person indicates they want one
+- Recovery requires complete rest — physical AND mental
+- The crash may last minutes to hours
+- The person may need someone to contact a friend or family member using their phone
+- They may need help getting home when they are able to move
 
-Consider the context and suggest responses covering different likely intentions (e.g. one affirmative, one negative, one specific need).
+COMMON NEEDS DURING A PUBLIC CRASH:
+- Water
+- To be left in a quiet, dim place
+- Someone to stay nearby in case they need help
+- Their phone to contact someone
+- Help getting to a safe resting spot when ready
+- Reassurance that they are ok and this will pass
+- People to give them space and not crowd around
+
+GUIDELINES FOR SUGGESTIONS:
+- One response should generally address what was asked directly
+- One should express a specific physical need if relevant
+- One can set a boundary or give direction (e.g. "Please don't call an ambulance")
+- Prefer specific responses like "Can you find me a quiet room" over vague ones like "I need help"
+- Never suggest anything requiring physical or mental exertion
+- Be warm but practical
+- Remember the person helping is likely unfamiliar with ME/CFS
+
+Someone nearby has just spoken to the person. Generate exactly 3 short, practical responses they might want to give. Each response MUST be 2-10 words. Return ONLY a JSON array of 3 strings. No markdown, no backticks, no explanation.
 
 The person nearby said: "${heard}"`,
                 },
@@ -36,7 +64,7 @@ The person nearby said: "${heard}"`,
           ],
           generationConfig: {
             temperature: 0.7,
-            maxOutputTokens: 150,
+            maxOutputTokens: 300,
           },
         }),
       }
@@ -57,8 +85,9 @@ The person nearby said: "${heard}"`,
   }
 }
 
-export default function CommScreen() {
+export default function CommScreen({ onContacts }) {
   const [flash, setFlash] = useState(null);
+  const [flashText, setFlashText] = useState(null);
   const [listening, setListening] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [suggestions, setSuggestions] = useState([]);
@@ -76,7 +105,8 @@ export default function CommScreen() {
   const speakSuggestion = (text) => {
     speak(text);
     setLastSpoken(text);
-    setFlash(null);
+    setFlashText(text);
+    setTimeout(() => setFlashText(null), 3000);
     setSuggestions([]);
     setTranscript('');
   };
@@ -168,6 +198,26 @@ export default function CommScreen() {
           text={flash}
           color={flash === 'YES' ? 'green' : 'red'}
         />
+      )}
+
+      {flashText && (
+        <div
+          onClick={() => setFlashText(null)}
+          style={{
+            position: 'absolute', inset: 0, display: 'flex',
+            alignItems: 'center', justifyContent: 'center',
+            background: 'rgba(29, 158, 117, 0.92)', zIndex: 10,
+            padding: '2rem', animation: 'flashIn 0.15s ease',
+            cursor: 'pointer'
+          }}
+        >
+          <span style={{
+            fontSize: 36, fontWeight: 500, color: '#fff',
+            textAlign: 'center', lineHeight: 1.4
+          }}>
+            {flashText}
+          </span>
+        </div>
       )}
 
       {/* YES / NO buttons */}
@@ -286,7 +336,22 @@ export default function CommScreen() {
 
         {/* Quick phrases pinned to bottom */}
         <div style={{ marginTop: 'auto', paddingTop: 16 }}>
-          <QuickPhrases onSpoken={setLastSpoken} />
+          <QuickPhrases onSpoken={(text) => {
+            setLastSpoken(text);
+            setFlashText(text);
+            setTimeout(() => setFlashText(null), 3000);
+          }} />
+          <button
+            onClick={onContacts}
+            style={{
+              marginTop: 12, width: '100%', padding: '14px',
+              fontSize: 15, fontWeight: 500, background: 'var(--red-light)',
+              color: 'var(--red)', border: 'none', borderRadius: 12,
+              cursor: 'pointer'
+            }}
+          >
+            Emergency contacts
+          </button>
         </div>
       </div>
     </div>

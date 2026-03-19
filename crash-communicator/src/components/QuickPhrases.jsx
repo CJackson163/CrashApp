@@ -2,13 +2,15 @@ import { speak } from '../utils/speech';
 
 const PHRASES = [
   "I need water",
-  "I need to rest",
-  "Please be quiet",
-  "Turn off the light",
-  "I need help",
-  "Thank you",
-  "I'm in pain",
-  "Please stay with me",
+  "Please don't call an ambulance",
+  "I just need to rest",
+  "Please speak quietly",
+  "Can you find a quiet room",
+  "Please call someone on my phone",
+  "I can't move right now",
+  "This will pass, I'm ok",
+  "Please give me space",
+  "Thank you for helping",
 ];
 
 export default function QuickPhrases({ onSpoken }) {
